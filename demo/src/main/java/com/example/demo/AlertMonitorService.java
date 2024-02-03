@@ -2,12 +2,12 @@ package com.example.demo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,39 +15,34 @@ import java.util.concurrent.Executors;
 public class AlertMonitorService {
 
     private static final Logger logger = LogManager.getLogger(AlertMonitorService.class);
+    private static final Integer NUMBER_EVENT_TYPES = EnumSet.allOf(EventType.class).size();
+    private ProcessTumblingWindow processTumblingWindow;
+
+    @Autowired
+    public AlertMonitorService(ProcessTumblingWindow processTumblingWindow){
+        this.processTumblingWindow = processTumblingWindow;
+    }
+
 
     public AlertConfigList getAlertConfig(AlertConfigList alertConfigList){
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_EVENT_TYPES);
         Optional<List<AlertConfigItem>> alertConfigItems = Optional.ofNullable(alertConfigList.getAlertConfigList());
         if(alertConfigItems.isPresent()){
-            alertConfigItems.get().forEach(this::processAlertConfigItem);
-        }
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-        executorService.shutdown();
-        return alertConfigList;
-    }
+            alertConfigItems.get().stream().forEach(alertConfigItem -> {
+                switch (alertConfigItem.getAlertConfig().getType()) {
+                    case TUMBLING_WINDOW: logStart(alertConfigItem);
+                    processTumblingWindow.enqueueAlertConfig(alertConfigItem);
+                    logEnd(alertConfigItem);
 
-    private void processAlertConfigItem(AlertConfigItem alertConfigItem) {
-        Optional<List<DispatchStrategy>> dispatchStrategyList = Optional.ofNullable(alertConfigItem.getDispatchStrategyList());
-        if(dispatchStrategyList.isPresent()){
-            dispatchStrategyList.get().forEach(dispatchStrategy -> {
-                logStart(alertConfigItem);
-                processDispatchStrategy(dispatchStrategy);
-                logEnd(alertConfigItem);
+                    logStart(alertConfigItem);
+                    logThreshold(alertConfigItem);
+                    processTumblingWindow.processAlertConfigs();
+                    logEnd(alertConfigItem); break;
+                }
             });
         }
-    }
-
-    private void processDispatchStrategy(DispatchStrategy dispatchStrategy) {
-        switch(dispatchStrategy.getType()){
-            case CONSOLE:
-                logConsoleDispatch(dispatchStrategy);
-                break;
-            case EMAIL:
-                logEmailDispatch();
-                break;
-        }
+        executorService.shutdown();
+        return alertConfigList;
     }
 
     private void logStart(AlertConfigItem alertConfigItem) {
@@ -58,12 +53,8 @@ public class AlertMonitorService {
         logger.info("[INFO] MonitoringService: Client {} {} {} ends", alertConfigItem.getClient(), alertConfigItem.getEventType(), alertConfigItem.getAlertConfig().getType());
     }
 
-    private void logConsoleDispatch(DispatchStrategy dispatchStrategy) {
-        logger.info("[INFO] AlertingService: \u001B[1mDispatching to Console\u001B[0m");
-        logger.warn("[WARN] Alert: \u001B[1m`" + dispatchStrategy.getMessage() + "`\u001B[0m"); // Example, replace with actual message
+    private void logThreshold(AlertConfigItem alertConfigItem) {
+        logger.info("[INFO] MonitoringService: Client {} {} \u001B[1mthreshold breached\u001B[0m", alertConfigItem.getClient(), alertConfigItem.getEventType());
     }
 
-    private void logEmailDispatch() {
-        logger.info("[INFO] AlertingService: \u001B[1mDispatching an Email\u001B[0m");
-    }
 }
