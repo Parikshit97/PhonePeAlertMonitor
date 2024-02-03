@@ -3,7 +3,7 @@ package com.example.demo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AlertConfig {
-    private String type;
+    private AlertConfigEventType type;
     private int count;
     @JsonProperty("windowSizeInSecs")
     private int windowSizeInSecs;
@@ -11,11 +11,11 @@ public class AlertConfig {
     // Getters and setters
 
     @JsonProperty("type")
-    public String getType() {
+    public AlertConfigEventType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(AlertConfigEventType type) {
         this.type = type;
     }
 

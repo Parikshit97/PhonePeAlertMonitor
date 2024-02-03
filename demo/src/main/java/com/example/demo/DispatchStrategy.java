@@ -1,10 +1,14 @@
 package com.example.demo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.LocalDateTime;
+
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class DispatchStrategy {
+public class DispatchStrategy implements Comparable<DispatchStrategy> {
     private DispatchType type;
     private String message;
     private String subject;
@@ -38,6 +42,18 @@ public class DispatchStrategy {
         this.subject = subject;
     }
 
+    @JsonIgnore
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    private LocalDateTime timestamp;
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
     @Override
     public String toString() {
         return "DispatchStrategy{" +
@@ -45,5 +61,10 @@ public class DispatchStrategy {
                 ", message='" + message + '\'' +
                 ", subject='" + subject + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(DispatchStrategy other) {
+        return this.timestamp.compareTo(other.timestamp);
     }
 }
