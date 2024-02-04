@@ -87,6 +87,14 @@ After the following the above (package setup and exception raise) steps, check t
 Docker Container Logs Screesnhot:
 
 
+Another way, to check docker container logs, through terminal, <code>docker logs <i> [containerid] </i> </code> (<i>Replace the container id of the docker container name 'alertmonitor-backend' </i>) 
+<br> <br>
+Refer to the screenshot below:
+
+
+
+
+
 
 
 
