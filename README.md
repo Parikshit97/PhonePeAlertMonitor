@@ -13,6 +13,8 @@
 <h3>Setup</h3>
 <hr>
 
+<i>Note: Please use 'main' branch for checking purpose.</i>
+
 <p>
 <ol>
   <li>Clone the repository using <code>git clone git@github.com:Parikshit97/alertmonitor.git</code></li>
