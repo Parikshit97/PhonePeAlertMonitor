@@ -9,7 +9,7 @@ public class AlertConfig {
     private AlertConfigEventType type;
     private int count;
     @JsonProperty("windowSizeInSecs")
-    private Integer windowSizeInSecs;
+    private Long windowSizeInSecs;
 
     // Getters and setters
     @JsonProperty("type")
@@ -22,7 +22,7 @@ public class AlertConfig {
     }
 
     @JsonProperty("count")
-    public int getCount() {
+    public long getCount() {
         return count;
     }
 
@@ -30,11 +30,11 @@ public class AlertConfig {
         this.count = count;
     }
 
-    public Integer getWindowSizeInSecs() {
+    public Long getWindowSizeInSecs() {
         return windowSizeInSecs;
     }
 
-    public void setWindowSizeInSecs(Integer windowSizeInSecs) {
+    public void setWindowSizeInSecs(Long windowSizeInSecs) {
         this.windowSizeInSecs = windowSizeInSecs;
     }
 

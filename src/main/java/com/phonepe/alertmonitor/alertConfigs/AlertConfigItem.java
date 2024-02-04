@@ -3,6 +3,7 @@ package com.phonepe.alertmonitor.alertConfigs;
 import com.phonepe.alertmonitor.dispatchConfigs.DispatchStrategy;
 import com.phonepe.alertmonitor.enums.EventType;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class AlertConfigItem {

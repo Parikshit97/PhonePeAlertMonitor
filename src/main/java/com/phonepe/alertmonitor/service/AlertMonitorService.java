@@ -1,66 +1,81 @@
 package com.phonepe.alertmonitor.service;
 
+import com.phonepe.alertmonitor.AlertMonitorModel;
+import com.phonepe.alertmonitor.alertConfigs.AlertConfig;
 import com.phonepe.alertmonitor.alertConfigs.AlertConfigItem;
 import com.phonepe.alertmonitor.alertConfigs.AlertConfigList;
+import com.phonepe.alertmonitor.entities.ClientConfiguration;
+import com.phonepe.alertmonitor.entities.GlobalCounter;
 import com.phonepe.alertmonitor.enums.EventType;
-import com.phonepe.alertmonitor.interfaces.ProcessAlertEvents;
-import com.phonepe.alertmonitor.processEventsImplementations.ProcessSlidingWindow;
-import com.phonepe.alertmonitor.processEventsImplementations.ProcessTumblingWindow;
+import com.phonepe.alertmonitor.exceptionRequests.ExceptionRaise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.EnumSet;
+import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 @Service
 public class AlertMonitorService {
 
     private static final Logger logger = LogManager.getLogger(AlertMonitorService.class);
-    private static final Integer NUMBER_EVENT_TYPES = EnumSet.allOf(EventType.class).size();
-    private ProcessAlertEvents processTumblingWindow;
-    private ProcessAlertEvents processSlidingWindow;
+
+    private AlertMonitorModel alertMonitorModel;
 
     @Autowired
-    public AlertMonitorService(ProcessTumblingWindow processTumblingWindow,
-                               ProcessSlidingWindow processSlidingWindow){
-        this.processTumblingWindow = processTumblingWindow;
-        this.processSlidingWindow = processSlidingWindow;
+    public AlertMonitorService(AlertMonitorModel alertMonitorModel){
+        this.alertMonitorModel = alertMonitorModel;
     }
 
 
-    public AlertConfigList getAlertConfig(AlertConfigList alertConfigList){
-        ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_EVENT_TYPES);
-        Optional<List<AlertConfigItem>> alertConfigItems = Optional.ofNullable(alertConfigList.getAlertConfigList());
-        if(alertConfigItems.isPresent()){
-            alertConfigItems.get().stream().forEach(alertConfigItem -> {
-                if(thresholdBreached(alertConfigItem)){
-                    switch (alertConfigItem.getAlertConfig().getType()) {
-                        case TUMBLING_WINDOW: logStart(alertConfigItem);
-                            processTumblingWindow.enqueueAlertConfig(alertConfigItem);
-                            logEnd(alertConfigItem);
+    public void saveClientConfigurations(AlertConfigList alertConfigList) {
+        List<AlertConfigItem> alertConfigItems = alertConfigList.getAlertConfigList();
 
-                            logStart(alertConfigItem);
-                            logThreshold(alertConfigItem);
-                            processTumblingWindow.processAlertConfigs();
-                            logEnd(alertConfigItem);
-                            break;
+        for (AlertConfigItem alertConfigItem : alertConfigItems) {
+            ClientConfiguration existingClientConfig = getByClientAndEventType(alertConfigItem.getClient(), alertConfigItem.getEventType());
 
-                        case SLIDING_WINDOW:
-                            processSlidingWindow.enqueueAlertConfig(alertConfigItem);
-                            logThreshold(alertConfigItem);
-                            processSlidingWindow.processAlertConfigs();
-                    }
-                }
+            if (existingClientConfig != null) {
+                alertMonitorModel.updateClientConfiguration(alertConfigItem.getAlertConfig(), existingClientConfig);
+            } else {
+                ClientConfiguration newClientConfig = convertToClientConfiguration(alertConfigItem);
+                alertMonitorModel.saveClientConfiguration(newClientConfig);
+            }
 
-            });
+            this.initializeGlobalCounters(alertConfigItem);
         }
-        executorService.shutdown();
-        return alertConfigList;
+    }
+
+    private void initializeGlobalCounters(AlertConfigItem alertConfigItem){
+        alertMonitorModel.initializeGlobalCounters(createGlobalCountersFromAlertConfigItem(alertConfigItem));
+    }
+
+    private GlobalCounter createGlobalCountersFromAlertConfigItem(AlertConfigItem alertConfigItem){
+        GlobalCounter globalCounter = new GlobalCounter();
+        globalCounter.setClient(alertConfigItem.getClient());
+        globalCounter.setEventType(alertConfigItem.getEventType());
+        globalCounter.setWindowSizeInSecs(alertConfigItem.getAlertConfig().getWindowSizeInSecs());
+        globalCounter.setCount(alertConfigItem.getAlertConfig().getCount());
+        globalCounter.setTimeNow(Instant.now().getEpochSecond());
+        globalCounter.setTimeUpdated(0L);
+        globalCounter.setGc(0L);
+        return globalCounter;
+    }
+
+    private ClientConfiguration getByClientAndEventType(String client, EventType eventType) {
+        return alertMonitorModel.getByClientAndEventType(client, eventType);
+    }
+
+    private ClientConfiguration getClientConfiguration(String client, EventType eventType, AlertConfig alertType) {
+        return alertMonitorModel.getClientConfiguration(client, eventType, alertType);
+    }
+
+    private ClientConfiguration convertToClientConfiguration(AlertConfigItem alertConfigItem) {
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setClient(alertConfigItem.getClient());
+        clientConfiguration.setEventType(alertConfigItem.getEventType());
+        clientConfiguration.setAlertConfig(alertConfigItem.getAlertConfig());
+        clientConfiguration.setDispatchStrategyList(alertConfigItem.getDispatchStrategyList());
+        return clientConfiguration;
     }
 
     private boolean thresholdBreached(AlertConfigItem alertConfigItem) {
@@ -75,8 +90,10 @@ public class AlertMonitorService {
         logger.info("[INFO] MonitoringService: Client {} {} {} ends", alertConfigItem.getClient(), alertConfigItem.getEventType(), alertConfigItem.getAlertConfig().getType());
     }
 
-    private void logThreshold(AlertConfigItem alertConfigItem) {
-        logger.info("[INFO] MonitoringService: Client {} {} \u001B[1mthreshold breached\u001B[0m", alertConfigItem.getClient(), alertConfigItem.getEventType());
-    }
 
+    public void raiseException(ExceptionRaise exceptionRaise) {
+         alertMonitorModel.updateGlobalCounter(exceptionRaise);
+    }
 }
+
+
