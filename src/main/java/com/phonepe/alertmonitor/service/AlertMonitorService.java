@@ -1,6 +1,6 @@
 package com.phonepe.alertmonitor.service;
 
-import com.phonepe.alertmonitor.AlertMonitorModel;
+import com.phonepe.alertmonitor.models.AlertMonitorModel;
 import com.phonepe.alertmonitor.alertConfigs.AlertConfig;
 import com.phonepe.alertmonitor.alertConfigs.AlertConfigItem;
 import com.phonepe.alertmonitor.alertConfigs.AlertConfigList;
@@ -78,21 +78,14 @@ public class AlertMonitorService {
         return clientConfiguration;
     }
 
-    private boolean thresholdBreached(AlertConfigItem alertConfigItem) {
-        return alertConfigItem.getAlertConfig().getCount() >= alertConfigItem.getAlertConfig().getWindowSizeInSecs();
-    }
-
-    private void logStart(AlertConfigItem alertConfigItem) {
-        logger.info("[INFO] MonitoringService: Client {} {} {} starts", alertConfigItem.getClient(), alertConfigItem.getEventType(), alertConfigItem.getAlertConfig().getType());
-    }
-
-    private void logEnd(AlertConfigItem alertConfigItem) {
-        logger.info("[INFO] MonitoringService: Client {} {} {} ends", alertConfigItem.getClient(), alertConfigItem.getEventType(), alertConfigItem.getAlertConfig().getType());
-    }
-
-
     public void raiseException(ExceptionRaise exceptionRaise) {
-         alertMonitorModel.updateGlobalCounter(exceptionRaise);
+         ClientConfiguration clientConfiguration = alertMonitorModel.getByClientAndEventType(exceptionRaise.getClient(),
+                 exceptionRaise.getEventType());
+         switch (clientConfiguration.getAlertConfig().getType()){
+             case TUMBLING_WINDOW: alertMonitorModel.updateGlobalCounterTumblingWindow(exceptionRaise); break;
+             case SLIDING_WINDOW: alertMonitorModel.updateGlobalCounterSlidingWindow(exceptionRaise); break;
+         }
+
     }
 }
 

@@ -1,7 +1,7 @@
 FROM maven:3.8.4-openjdk-17 AS build
 WORKDIR /app
 COPY . /app
-RUN mvn package -DskipTestspackage
+RUN mvn clean install -DskipTests
 
 FROM amazoncorretto:17
 WORKDIR /app

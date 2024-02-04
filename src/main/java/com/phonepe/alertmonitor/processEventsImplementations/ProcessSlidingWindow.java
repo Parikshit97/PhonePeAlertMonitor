@@ -1,58 +1,100 @@
 package com.phonepe.alertmonitor.processEventsImplementations;
 
-import com.phonepe.alertmonitor.alertConfigs.AlertConfigItem;
-import com.phonepe.alertmonitor.dispatchConfigs.DispatchStrategy;
-import com.phonepe.alertmonitor.interfaces.ProcessAlertEvents;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.phonepe.alertmonitor.repositories.ClientConfigurationRepository;
+import com.phonepe.alertmonitor.repositories.GlobalCounterRepository;
+import com.phonepe.alertmonitor.entities.ClientConfiguration;
+import com.phonepe.alertmonitor.entities.GlobalCounter;
+import com.phonepe.alertmonitor.enums.EventType;
+import com.phonepe.alertmonitor.exceptionRequests.ExceptionRaise;
+import com.phonepe.alertmonitor.interfaces.WindowOperation;
+import com.phonepe.alertmonitor.logDispatcher.LogDispatcher;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import java.time.Instant;
+import java.util.Optional;
 
-import java.time.LocalDateTime;
-import java.util.concurrent.PriorityBlockingQueue;
 
 @Component
-public class ProcessSlidingWindow implements ProcessAlertEvents {
+public class ProcessSlidingWindow implements WindowOperation {
 
-    private PriorityBlockingQueue<DispatchStrategy> alertConfigPriorityBlockingQueue;
-    private static final Logger logger = LogManager.getLogger(ProcessSlidingWindow.class);
+    private final LogDispatcher logDispatcher;
 
-    ProcessSlidingWindow(){
-        this.alertConfigPriorityBlockingQueue = new PriorityBlockingQueue<>();
+    private final ClientConfigurationRepository clientConfigurationRepository;
+    private GlobalCounterRepository globalCounterRepository;
+
+    @Autowired
+    public ProcessSlidingWindow(LogDispatcher logDispatcher,
+                                ClientConfigurationRepository clientConfigurationRepository,
+                                GlobalCounterRepository globalCounterRepository
+                                ) {
+        this.clientConfigurationRepository = clientConfigurationRepository;
+        this.logDispatcher = logDispatcher;
+        this.globalCounterRepository = globalCounterRepository;
     }
 
     @Override
-    public void enqueueAlertConfig(AlertConfigItem alertConfigItem){
-        alertConfigItem.getDispatchStrategyList().stream().forEach(dispatchStrategy -> {
-            dispatchStrategy.setTimestamp(LocalDateTime.now());
-            this.alertConfigPriorityBlockingQueue.add(dispatchStrategy);
-        });
-    }
+    public void updateGlobalCounterSlidingWindow(ExceptionRaise exceptionRaise) {
+        GlobalCounter globalCounter = findByClientAndEventType(
+                exceptionRaise.getClient(),
+                exceptionRaise.getEventType());
+        ClientConfiguration clientConfiguration = getByClientAndEventType(globalCounter.getClient(),
+                globalCounter.getEventType());
+        Long currentEpochSecond = Instant.now().getEpochSecond();
+        if (globalCounter != null) {
+            Long window = currentEpochSecond - globalCounter.getTimeNow();
+            if (window <= globalCounter.getWindowSizeInSecs()) {
+                if (globalCounter.getGc() + 1 >= globalCounter.getCount()) {
+                    /**
+                     threshold breached
+                     */
+                    logDispatcher.logThreshold(globalCounter);
 
-    @Override
-    public void processAlertConfigs(){
-        while(!this.alertConfigPriorityBlockingQueue.isEmpty()){
-            processDispatchStrategy(this.alertConfigPriorityBlockingQueue.remove());
+                    if (clientConfiguration != null) {
+                        clientConfiguration.getDispatchStrategyList().stream().forEach(dispatchStrategy -> {
+                            switch (dispatchStrategy.getType()) {
+                                case CONSOLE:
+                                    logDispatcher.logConsoleDispatch(dispatchStrategy);
+                                    break;
+                                case EMAIL:
+                                    logDispatcher.logEmailDispatch();
+                                    break;
+                            }
+                        });
+                    }
+                }
+            }
+
+            if (currentEpochSecond - globalCounter.getTimeUpdated() >= globalCounter.getWindowSizeInSecs()) {
+                /**
+                 * threshold did not breach
+                 * check window, if exceeded, update the gc to 1 and timenow to current epoch + 1L
+                 * shifting widow by 1 unit
+                 */
+                globalCounter.setTimeUpdated(globalCounter.getTimeNow() + 1L);
+                globalCounter.setTimeNow(currentEpochSecond + 1L);
+                globalCounter.setGc(1L);
+                saveGlobalCounter(globalCounter);
+            } else {
+                // Increment gc and save
+                globalCounter.setGc(globalCounter.getGc() + 1);
+                saveGlobalCounter(globalCounter);
+            }
         }
     }
 
-    private void processDispatchStrategy(DispatchStrategy dispatchStrategy) {
-        switch(dispatchStrategy.getType()){
-            case CONSOLE:
-                logConsoleDispatch(dispatchStrategy);
-                break;
-            case EMAIL:
-                logEmailDispatch();
-                break;
-        }
+    private ClientConfiguration getByClientAndEventType(String client, EventType eventType) {
+        Optional<ClientConfiguration> optionalClientConfiguration = clientConfigurationRepository
+                .findByClientAndEventType(client, eventType);
+        return optionalClientConfiguration.orElse(null);
     }
 
-    private void logConsoleDispatch(DispatchStrategy dispatchStrategy) {
-        logger.info("[INFO] AlertingService: \u001B[1mDispatching to Console\u001B[0m");
-        logger.warn("[WARN] Alert: \u001B[1m`" + dispatchStrategy.getMessage() + "`\u001B[0m");
+    private GlobalCounter findByClientAndEventType(String client, EventType eventType) {
+        Optional<GlobalCounter> optionalGlobalCounter = globalCounterRepository.findByClientAndEventType(client, eventType);
+        return optionalGlobalCounter.orElse(null);
     }
 
-    private void logEmailDispatch() {
-        logger.info("[INFO] AlertingService: \u001B[1mDispatching an Email\u001B[0m");
+    private void saveGlobalCounter(GlobalCounter globalCounter) {
+        globalCounterRepository.save(globalCounter);
     }
 
 }
