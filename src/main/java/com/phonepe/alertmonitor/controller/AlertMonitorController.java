@@ -20,7 +20,7 @@ public class AlertMonitorController {
     }
 
     @PostMapping(value = "/")
-    public AlertConfigList raiseAlert(@RequestBody AlertConfigList alertConfigList){
-        return alertMonitorService.getAlertConfig(alertConfigList);
+    public void raiseAlert(@RequestBody AlertConfigList alertConfigList){
+        alertMonitorService.saveClientConfigurations(alertConfigList);
     }
 }
