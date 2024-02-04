@@ -1,6 +1,6 @@
 <h1> Alert Monitor </h1>
 
-<h3>Setup</h3>
+<h3>Tech Stack</h3>
 <hr>
 <ol>
   <li>JAVA - Spring Framework</li>
