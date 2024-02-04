@@ -1,5 +1,8 @@
-package com.example.demo;
+package com.example.demo.processEventsImplementations;
 
+import com.example.demo.alertConfigs.AlertConfigItem;
+import com.example.demo.dispatchConfigs.DispatchStrategy;
+import com.example.demo.interfaces.ProcessAlertEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -8,15 +11,16 @@ import java.time.LocalDateTime;
 import java.util.concurrent.PriorityBlockingQueue;
 
 @Component
-public class ProcessTumblingWindow {
+public class ProcessSlidingWindow implements ProcessAlertEvents {
 
     private PriorityBlockingQueue<DispatchStrategy> alertConfigPriorityBlockingQueue;
-    private static final Logger logger = LogManager.getLogger(ProcessTumblingWindow.class);
+    private static final Logger logger = LogManager.getLogger(ProcessSlidingWindow.class);
 
-    ProcessTumblingWindow(){
+    ProcessSlidingWindow(){
         this.alertConfigPriorityBlockingQueue = new PriorityBlockingQueue<>();
     }
 
+    @Override
     public void enqueueAlertConfig(AlertConfigItem alertConfigItem){
         alertConfigItem.getDispatchStrategyList().stream().forEach(dispatchStrategy -> {
             dispatchStrategy.setTimestamp(LocalDateTime.now());
@@ -24,6 +28,7 @@ public class ProcessTumblingWindow {
         });
     }
 
+    @Override
     public void processAlertConfigs(){
         while(!this.alertConfigPriorityBlockingQueue.isEmpty()){
             processDispatchStrategy(this.alertConfigPriorityBlockingQueue.remove());
@@ -49,4 +54,5 @@ public class ProcessTumblingWindow {
     private void logEmailDispatch() {
         logger.info("[INFO] AlertingService: \u001B[1mDispatching an Email\u001B[0m");
     }
+
 }

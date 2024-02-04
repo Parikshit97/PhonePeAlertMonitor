@@ -1,5 +1,7 @@
-package com.example.demo;
+package com.example.demo.alertConfigs;
 
+import com.example.demo.dispatchConfigs.DispatchStrategy;
+import com.example.demo.enums.EventType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
