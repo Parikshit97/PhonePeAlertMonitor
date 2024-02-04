@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phonepe-alertmonitor-deployment
+  namespace: alertmonitor
+  labels:
+    app: alertmonitor
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: alertmonitor
+  template:
+    metadata:
+      namespace: alertmonitor
+      labels:
+        app: alertmonitor
+    spec:
+      containers:
+      - name: alertmonitor
+        image: parikshit3097/phonepe-alertmonitor
+        ports:
+        - containerPort: 8080
+
