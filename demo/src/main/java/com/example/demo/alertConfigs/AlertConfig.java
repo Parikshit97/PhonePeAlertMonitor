@@ -1,15 +1,17 @@
-package com.example.demo;
+package com.example.demo.alertConfigs;
 
+import com.example.demo.enums.AlertConfigEventType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AlertConfig {
     private AlertConfigEventType type;
     private int count;
     @JsonProperty("windowSizeInSecs")
-    private int windowSizeInSecs;
+    private Integer windowSizeInSecs;
 
     // Getters and setters
-
     @JsonProperty("type")
     public AlertConfigEventType getType() {
         return type;
@@ -28,11 +30,11 @@ public class AlertConfig {
         this.count = count;
     }
 
-    public int getWindowSizeInSecs() {
+    public Integer getWindowSizeInSecs() {
         return windowSizeInSecs;
     }
 
-    public void setWindowSizeInSecs(int windowSizeInSecs) {
+    public void setWindowSizeInSecs(Integer windowSizeInSecs) {
         this.windowSizeInSecs = windowSizeInSecs;
     }
 

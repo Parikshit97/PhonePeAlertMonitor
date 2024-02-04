@@ -1,5 +1,6 @@
-package com.example.demo;
+package com.example.demo.dispatchConfigs;
 
+import com.example.demo.enums.DispatchType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;

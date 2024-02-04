@@ -1,4 +1,6 @@
-package com.example.demo;
+package com.example.demo.alertConfigs;
+
+import com.example.demo.alertConfigs.AlertConfigItem;
 
 import java.util.List;
 
