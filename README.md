@@ -93,13 +93,31 @@ URL : https://hub.docker.com/repository/docker/parikshit3097/phonepe-alertmonito
 <h4>Output Check</h4><br>
 To check the output, I used docker desktop to check running docker contianer logs. 
 After the following the above (package setup and exception raise) steps, check the running docker container logs in docker desktop.
-
+<br><br>
 Docker Container Logs Screesnhot:
+<br><br>
+
+![image](https://github.com/Parikshit97/alertmonitor/assets/30137444/2ca8edcd-a0ed-40aa-a242-5ef337db6aa0)
 
 
+<br><br>
 Another way, to check docker container logs, through terminal, <code>docker logs <i> [containerid] </i> </code> (<i>Replace the container id of the docker container name 'alertmonitor-backend' </i>) 
 <br> <br>
-Refer to the screenshot below:
+Refer to the screenshots below:
+
+<br><br>
+
+![image](https://github.com/Parikshit97/alertmonitor/assets/30137444/c970b3c6-45f2-491d-bf8d-1a1e5a3e901f)
+
+<br><br>
+
+![image](https://github.com/Parikshit97/alertmonitor/assets/30137444/cd4cbc49-262f-460c-8c46-61362d72d4cd)
+
+
+
+
+
+
 
 
 
