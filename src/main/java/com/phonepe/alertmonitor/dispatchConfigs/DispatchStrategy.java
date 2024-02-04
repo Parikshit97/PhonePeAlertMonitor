@@ -15,7 +15,6 @@ public class DispatchStrategy implements Comparable<DispatchStrategy> {
     private String subject;
 
     // Getters and setters
-
     @JsonProperty("type")
     public DispatchType getType() {
         return type;

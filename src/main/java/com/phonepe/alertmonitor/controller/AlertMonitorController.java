@@ -26,7 +26,7 @@ public class AlertMonitorController {
     }
 
     @PostMapping(value = "/raise")
-    public void raiseException(@RequestBody ExceptionRaise exceptionRaise){
+    public void raiseExcepiotn(@RequestBody ExceptionRaise exceptionRaise){
         alertMonitorService.raiseException(exceptionRaise);
     }
 

@@ -1,4 +1,4 @@
-package com.phonepe.alertmonitor;
+package com.phonepe.alertmonitor.repositories;
 
 import com.phonepe.alertmonitor.alertConfigs.AlertConfig;
 import com.phonepe.alertmonitor.entities.ClientConfiguration;
