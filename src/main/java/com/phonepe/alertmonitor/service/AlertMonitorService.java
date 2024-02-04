@@ -5,11 +5,15 @@ import com.phonepe.alertmonitor.alertConfigs.AlertConfig;
 import com.phonepe.alertmonitor.alertConfigs.AlertConfigItem;
 import com.phonepe.alertmonitor.alertConfigs.AlertConfigList;
 import com.phonepe.alertmonitor.entities.ClientConfiguration;
+import com.phonepe.alertmonitor.entities.GlobalCounter;
 import com.phonepe.alertmonitor.enums.EventType;
+import com.phonepe.alertmonitor.exceptionRequests.ExceptionRaise;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 import java.util.List;
 @Service
 public class AlertMonitorService {
@@ -36,19 +40,26 @@ public class AlertMonitorService {
                 ClientConfiguration newClientConfig = convertToClientConfiguration(alertConfigItem);
                 alertMonitorModel.saveClientConfiguration(newClientConfig);
             }
+
+            this.initializeGlobalCounters(alertConfigItem);
         }
     }
 
-    private void updateClientConfiguration(ClientConfiguration existingConfig, AlertConfigItem newConfigItem) {
-        AlertConfig newAlertConfig = newConfigItem.getAlertConfig();
-
-        existingConfig.setEventType(newConfigItem.getEventType());
-        existingConfig.setAlertConfig(newAlertConfig);
-        existingConfig.setDispatchStrategyList(newConfigItem.getDispatchStrategyList());
-
-//        alertMonitorModel.updateClientConfiguration(existingConfig);
+    private void initializeGlobalCounters(AlertConfigItem alertConfigItem){
+        alertMonitorModel.initializeGlobalCounters(createGlobalCountersFromAlertConfigItem(alertConfigItem));
     }
 
+    private GlobalCounter createGlobalCountersFromAlertConfigItem(AlertConfigItem alertConfigItem){
+        GlobalCounter globalCounter = new GlobalCounter();
+        globalCounter.setClient(alertConfigItem.getClient());
+        globalCounter.setEventType(alertConfigItem.getEventType());
+        globalCounter.setWindowSizeInSecs(alertConfigItem.getAlertConfig().getWindowSizeInSecs());
+        globalCounter.setCount(alertConfigItem.getAlertConfig().getCount());
+        globalCounter.setTimeNow(Instant.now().getEpochSecond());
+        globalCounter.setTimeUpdated(0L);
+        globalCounter.setGc(0L);
+        return globalCounter;
+    }
 
     private ClientConfiguration getByClientAndEventType(String client, EventType eventType) {
         return alertMonitorModel.getByClientAndEventType(client, eventType);
@@ -79,10 +90,10 @@ public class AlertMonitorService {
         logger.info("[INFO] MonitoringService: Client {} {} {} ends", alertConfigItem.getClient(), alertConfigItem.getEventType(), alertConfigItem.getAlertConfig().getType());
     }
 
-    private void logThreshold(AlertConfigItem alertConfigItem) {
-        logger.info("[INFO] MonitoringService: Client {} {} \u001B[1mthreshold breached\u001B[0m", alertConfigItem.getClient(), alertConfigItem.getEventType());
-    }
 
+    public void raiseException(ExceptionRaise exceptionRaise) {
+         alertMonitorModel.updateGlobalCounter(exceptionRaise);
+    }
 }
 
 

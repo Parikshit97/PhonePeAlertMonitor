@@ -1,6 +1,7 @@
 package com.phonepe.alertmonitor.controller;
 
 import com.phonepe.alertmonitor.alertConfigs.AlertConfigList;
+import com.phonepe.alertmonitor.exceptionRequests.ExceptionRaise;
 import com.phonepe.alertmonitor.service.AlertMonitorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,14 @@ public class AlertMonitorController {
     }
 
     @PostMapping(value = "/")
-    public void raiseAlert(@RequestBody AlertConfigList alertConfigList){
+    public void saveClientConfigurations(@RequestBody AlertConfigList alertConfigList){
         alertMonitorService.saveClientConfigurations(alertConfigList);
     }
+
+    @PostMapping(value = "/raise")
+    public void raiseException(@RequestBody ExceptionRaise exceptionRaise){
+        alertMonitorService.raiseException(exceptionRaise);
+    }
+
+
 }
