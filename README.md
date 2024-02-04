@@ -2,6 +2,16 @@
 
 <h3>Setup</h3>
 <hr>
+<ol>
+  <li>JAVA - Spring Framework</li>
+  <li>MongoDB</li>
+  <li>Docker</li>
+  <li>Kubernetes</li>
+</ol>
+
+
+<h3>Setup</h3>
+<hr>
 
 <p>
 <ol>
