@@ -113,6 +113,58 @@ Refer to the screenshots below:
 
 ![image](https://github.com/Parikshit97/alertmonitor/assets/30137444/cd4cbc49-262f-460c-8c46-61362d72d4cd)
 
+<br><br>
+
+<h4>MongoDB Collections</h4><br>
+The primary logic of <i>TUMBLING_WINDOW</i> and <i>SLIDING_WINDOW</i> is implemented using colections or tables in mongodb. MongoDB collections are accessible using MongoExpress 
+accessible over URL : http://0.0.0.0:8081/ after the docker container is UP and RUNNING.
+<br><br>
+
+Screesnhots of Database: (We are using alertmonitor)
+
+<br><br>
+
+<img width="1512" alt="image" src="https://github.com/Parikshit97/alertmonitor/assets/30137444/bdd8044c-a67c-4ef8-9119-38351bebabc8">
+
+<br><br>
+
+Screesnhots of Collections: (clientConfigurations and globalCounters)
+
+<br><br>
+
+<img width="1512" alt="image" src="https://github.com/Parikshit97/alertmonitor/assets/30137444/a35efc88-f421-43de-900c-5620b26a21a2">
+
+<br><br>
+
+Screenshot of clientConfigurations Collection:
+
+<br><br>
+
+<img width="1512" alt="image" src="https://github.com/Parikshit97/alertmonitor/assets/30137444/2414bcb4-c852-4be2-a8d8-1e0e1f9d1875">
+
+<br><br>
+
+Screenshot of globalCounters Collection:
+
+<br><br>
+
+<img width="1512" alt="image" src="https://github.com/Parikshit97/alertmonitor/assets/30137444/55f24ce2-0aac-4a56-a6cb-7f821c7fe5a0">
+
+<br><br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
