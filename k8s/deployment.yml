@@ -28,3 +28,11 @@ spec:
           env:
             - name: MONGO_DBNAME
               value: alertmonitor
+        - name: mongo-express
+          image: mongo-express
+          ports:
+            - containerPort: 8081
+          env:
+            - name: ME_CONFIG_MONGODB_SERVER
+              value: mongodb
+
